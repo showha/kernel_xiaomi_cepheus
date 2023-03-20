@@ -19,6 +19,7 @@ _all:
 #   (this increases performance and avoids hard-to-debug behaviour);
 # o Look for make include files relative to root of kernel src
 MAKEFLAGS += -rR --include-dir=$(CURDIR)
+KBUILD_CFLAGS += -w
 
 # Avoid funny character set dependencies
 unexport LC_ALL
