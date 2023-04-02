@@ -54,8 +54,6 @@
 #include <crypto/chacha.h>
 
 #include <asm/processor.h>
-=======
->>>>>>> v4.14.285
 #include <linux/uaccess.h>
 #include <linux/siphash.h>
 #include <linux/uio.h>
@@ -92,7 +90,6 @@ static struct fasync_struct *fasync;
 static DEFINE_SPINLOCK(random_ready_chain_lock);
 static RAW_NOTIFIER_HEAD(random_ready_chain);
 
-<<<<<<< HEAD
 static DEFINE_SPINLOCK(random_ready_list_lock);
 static LIST_HEAD(random_ready_list);
 
@@ -129,7 +126,6 @@ static struct ratelimit_state unseeded_warning =
 	RATELIMIT_STATE_INIT("warn_unseeded_randomness", HZ, 3);
 =======
 /* Control how we warn userspace. */
->>>>>>> v4.14.285
 static struct ratelimit_state urandom_warning =
 	RATELIMIT_STATE_INIT_FLAGS("urandom_warning", HZ, 3, RATELIMIT_MSG_ON_RELEASE);
 static int ratelimit_disable __read_mostly =
@@ -152,7 +148,6 @@ bool rng_is_initialized(void)
 }
 EXPORT_SYMBOL(rng_is_initialized);
 
-<<<<<<< HEAD
 struct entropy_store;
 struct entropy_store {
 	/* read-only data: */
@@ -203,10 +198,8 @@ static struct entropy_store blocking_pool = {
 static __u32 const twist_table[8] = {
 	0x00000000, 0x3b6e20c8, 0x76dc4190, 0x4db26158,
 	0xedb88320, 0xd6d6a3e8, 0x9b64c2b0, 0xa00ae278 };
-=======
 /* Used by wait_for_random_bytes(), and considered an entropy collector, below. */
 static void try_to_generate_entropy(void);
->>>>>>> v4.14.285
 
 /*
  * Wait for the input pool to be seeded and thus guaranteed to supply
@@ -228,7 +221,6 @@ int wait_for_random_bytes(void)
 		if (ret)
 			return ret > 0 ? 0 : ret;
 	}
-<<<<<<< HEAD
 
 	r->input_rotate = input_rotate;
 	r->add_ptr = i;
@@ -428,8 +420,6 @@ static int credit_entropy_bits_safe(struct entropy_store *r, int nbits)
 	nbits = min(nbits,  nbits_max);
 
 	credit_entropy_bits(r, nbits);
-=======
->>>>>>> v4.14.285
 	return 0;
 }
 EXPORT_SYMBOL(wait_for_random_bytes);
@@ -446,7 +436,6 @@ int __cold register_random_ready_notifier(struct notifier_block *nb)
 	unsigned long flags;
 	int ret = -EALREADY;
 
-<<<<<<< HEAD
 	if (!spin_trylock_irqsave(&primary_crng.lock, flags))
 		return 0;
 	if (crng_init != 0) {
@@ -650,10 +639,8 @@ static ssize_t extract_crng_user(void __user *buf, size_t nbytes)
 
 	/* Wipe data just written to memory */
 	memzero_explicit(tmp, sizeof(tmp));
-=======
 	if (crng_ready())
 		return ret;
->>>>>>> v4.14.285
 
 	spin_lock_irqsave(&random_ready_chain_lock, flags);
 	if (!crng_ready())
@@ -716,16 +703,13 @@ static void __cold process_random_ready_list(void)
  *
  *********************************************************************/
 
-<<<<<<< HEAD
 /* There is one of these per entropy source */
 struct timer_rand_state {
 	cycles_t last_time;
 	long last_delta, last_delta2;
-=======
 enum {
 	CRNG_RESEED_START_INTERVAL = HZ,
 	CRNG_RESEED_INTERVAL = 60 * HZ
->>>>>>> v4.14.285
 };
 
 static struct {
@@ -756,7 +740,6 @@ static void crng_reseed(void)
 	unsigned long next_gen;
 	u8 key[CHACHA20_KEY_SIZE];
 
-<<<<<<< HEAD
 	if (!crng_ready() && size)
 		crng_slow_load(buf, size);
 
@@ -793,9 +776,7 @@ static void add_timer_randomness(struct timer_rand_state *state, unsigned num)
 	sample.num = num;
 	r = &input_pool;
 	mix_pool_bytes(r, &sample, sizeof(sample));
-=======
 	extract_entropy(key, sizeof(key));
->>>>>>> v4.14.285
 
 	/*
 	 * We copy the new key into the base_crng, overwriting the old one,
@@ -803,7 +784,6 @@ static void add_timer_randomness(struct timer_rand_state *state, unsigned num)
 	 * because the per-cpu crngs are initialized to ULONG_MAX, so this
 	 * forces new CPUs that come online to always initialize.
 	 */
-<<<<<<< HEAD
 	delta = sample.jiffies - state->last_time;
 	state->last_time = sample.jiffies;
 
@@ -956,7 +936,6 @@ EXPORT_SYMBOL_GPL(add_disk_randomness);
 #endif
 
 /*********************************************************************
-=======
 	spin_lock_irqsave(&base_crng.lock, flags);
 	memcpy(base_crng.key, key, sizeof(base_crng.key));
 	next_gen = base_crng.generation + 1;
@@ -976,7 +955,6 @@ EXPORT_SYMBOL_GPL(add_disk_randomness);
  * the resultant ChaCha state to the user, along with the second
  * half of the block containing 32 bytes of random data that may
  * be used; random_data_len may not be greater than 32.
->>>>>>> v4.14.285
  *
  * The returned ChaCha state contains within it a copy of the old
  * key value, at index 4, so the state should always be zeroed out
@@ -1109,7 +1087,6 @@ static void _get_random_bytes(void *buf, size_t len)
 	len -= first_block_len;
 	buf += first_block_len;
 
-<<<<<<< HEAD
 	return _extract_entropy(r, buf, nbytes, fips_enabled);
 }
 
@@ -1147,13 +1124,11 @@ static ssize_t extract_entropy_user(struct entropy_store *r, void __user *buf,
 		i = min_t(int, nbytes, EXTRACT_SIZE);
 		if (copy_to_user(buf, tmp, i)) {
 			ret = -EFAULT;
-=======
 	while (len) {
 		if (len < CHACHA20_BLOCK_SIZE) {
 			chacha20_block(chacha_state, tmp);
 			memcpy(buf, tmp, len);
 			memzero_explicit(tmp, sizeof(tmp));
->>>>>>> v4.14.285
 			break;
 		}
 
@@ -1179,7 +1154,6 @@ static ssize_t extract_entropy_user(struct entropy_store *r, void __user *buf,
  */
 void get_random_bytes(void *buf, size_t len)
 {
-<<<<<<< HEAD
 	__u8 tmp[CHACHA_BLOCK_SIZE] __aligned(4);
 
 	trace_get_random_bytes(nbytes, _RET_IP_);
@@ -1269,14 +1243,12 @@ static void try_to_generate_entropy(void)
  *          -ERESTARTSYS if the function was interrupted by a signal.
  */
 int wait_for_random_bytes(void)
-=======
 	warn_unseeded_randomness();
 	_get_random_bytes(buf, len);
 }
 EXPORT_SYMBOL(get_random_bytes);
 
 static ssize_t get_random_bytes_user(struct iov_iter *iter)
->>>>>>> v4.14.285
 {
 	u32 chacha_state[CHACHA20_BLOCK_SIZE / sizeof(u32)];
 	u8 block[CHACHA20_BLOCK_SIZE];
@@ -1284,7 +1256,6 @@ static ssize_t get_random_bytes_user(struct iov_iter *iter)
 
 	if (unlikely(!iov_iter_count(iter)))
 		return 0;
-<<<<<<< HEAD
 
 	do {
 		int ret;
@@ -1298,8 +1269,6 @@ static ssize_t get_random_bytes_user(struct iov_iter *iter)
 	return 0;
 }
 EXPORT_SYMBOL(wait_for_random_bytes);
-=======
->>>>>>> v4.14.285
 
 	/*
 	 * Immediately overwrite the ChaCha key at index 4 with random
@@ -1439,28 +1408,22 @@ size_t __must_check get_random_bytes_arch(void *buf, size_t len)
 		if (!arch_get_random_long(&v))
 			break;
 
-<<<<<<< HEAD
 		memcpy(p, &v, chunk);
 		p += chunk;
 		nbytes -= chunk;
-=======
 		memcpy(p, &v, block_len);
 		p += block_len;
 		left -= block_len;
->>>>>>> v4.14.285
 	}
 
 	return len - left;
 }
 EXPORT_SYMBOL(get_random_bytes_arch);
 
-<<<<<<< HEAD
 /*
  * init_std_data - initialize pool with system data
-=======
 
 /**********************************************************************
->>>>>>> v4.14.285
  *
  * Entropy accumulation and extraction routines.
  *
@@ -2025,13 +1988,11 @@ static void __cold try_to_generate_entropy(void)
 	if (stack.entropy == random_get_entropy())
 		return;
 
-<<<<<<< HEAD
 		wait_event_interruptible(random_read_wait,
 		    blocking_pool.initialized &&
 		    (ENTROPY_BITS(&input_pool) >= random_read_wakeup_bits));
 		if (signal_pending(current))
 			return -ERESTARTSYS;
-=======
 	__setup_timer_on_stack(&stack.timer, entropy_timer, 0, 0);
 	while (!crng_ready() && !signal_pending(current)) {
 		if (!timer_pending(&stack.timer))
@@ -2039,7 +2000,6 @@ static void __cold try_to_generate_entropy(void)
 		mix_pool_bytes(&stack.entropy, sizeof(stack.entropy));
 		schedule();
 		stack.entropy = random_get_entropy();
->>>>>>> v4.14.285
 	}
 
 	del_timer_sync(&stack.timer);
@@ -2047,14 +2007,11 @@ static void __cold try_to_generate_entropy(void)
 	mix_pool_bytes(&stack.entropy, sizeof(stack.entropy));
 }
 
-<<<<<<< HEAD
 static ssize_t __maybe_unused
 random_read(struct file *file, char __user *buf, size_t nbytes, loff_t *ppos)
 {
 	return _random_read(file->f_flags & O_NONBLOCK, buf, nbytes);
 }
-=======
->>>>>>> v4.14.285
 
 /**********************************************************************
  *
@@ -2250,15 +2207,12 @@ static int random_fasync(int fd, struct file *filp, int on)
 }
 
 const struct file_operations random_fops = {
-<<<<<<< HEAD
 	.read  = urandom_read,
 	.write = random_write,
 	.poll  = random_poll,
-=======
 	.read_iter = random_read_iter,
 	.write_iter = random_write_iter,
 	.poll = random_poll,
->>>>>>> v4.14.285
 	.unlocked_ioctl = random_ioctl,
 	.compat_ioctl = compat_ptr_ioctl,
 	.fasync = random_fasync,
@@ -2403,7 +2357,6 @@ struct ctl_table random_table[] = {
 	},
 	{ }
 };
-<<<<<<< HEAD
 #endif 	/* CONFIG_SYSCTL */
 
 struct batched_entropy {
@@ -2553,6 +2506,4 @@ void add_hwgenerator_randomness(const char *buffer, size_t count,
 	credit_entropy_bits(poolp, entropy);
 }
 EXPORT_SYMBOL_GPL(add_hwgenerator_randomness);
-=======
 #endif	/* CONFIG_SYSCTL */
->>>>>>> v4.14.285
