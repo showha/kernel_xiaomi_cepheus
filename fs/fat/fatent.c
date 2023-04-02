@@ -94,7 +94,6 @@ err_brelse:
 err:
 	fat_msg_ratelimit(sb, KERN_ERR, "FAT read failed (blocknr %llu)",
 		(llu)blocknr);
-			  (llu)blocknr);
 	return -EIO;
 }
 
